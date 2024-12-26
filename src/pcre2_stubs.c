@@ -22,6 +22,10 @@
 #define UNUSED __attribute__((unused))
 #endif
 
+#ifndef Val_none
+#define Val_none (Val_long(0))
+#endif
+
 const int OPTION_SOME_TAG = 0;
 const int RESULT_OK_TAG = 0;
 const int RESULT_ERROR_TAG = 1;

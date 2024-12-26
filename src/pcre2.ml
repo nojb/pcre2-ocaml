@@ -1,5 +1,61 @@
 [@@@warning "-32"]
 
+module Array = struct
+  include Array
+
+  let find_map f a =
+    let n = length a in
+    let rec loop i =
+      if i = n then None
+      else
+        match f (unsafe_get a i) with
+        | None -> loop (succ i)
+        | Some _ as r -> r
+    in
+    loop 0
+end
+
+type ('a, 'b) t = Left of 'a | Right of 'b
+
+module List = struct
+  include List
+
+  let partition_map p l =
+    let rec part left right = function
+      | [] -> (rev left, rev right)
+      | x :: l ->
+          begin match p x with
+          | Left v -> part (v :: left) right l
+          | Right v -> part left (v :: right) l
+          end
+    in
+    part [] [] l
+end
+
+module Seq = struct
+  include Seq
+
+  let rec take_aux n xs =
+    if n = 0 then
+      empty
+    else
+      fun () ->
+        match xs() with
+        | Nil ->
+            Nil
+        | Cons (x, xs) ->
+            Cons (x, take_aux (n-1) xs)
+
+  let take n xs =
+    if n < 0 then invalid_arg "Seq.take";
+    take_aux n xs
+
+  let rec unfold f u () =
+    match f u with
+    | None -> Nil
+    | Some (x, u') -> Cons (x, unfold f u')
+end
+
 (* Registers exceptions with the C runtime and caches polymorphic variants *)
 let () = Bindings.pcre2_ocaml_init ()
 let ( >+= ) x f = Option.map f x
@@ -757,7 +813,7 @@ module Jit = struct
         (function
           | #jit_only_compile_option as x -> Right x
           | #Options.Interp.compile_option as x -> Left x
-          | _ -> .)
+        )
         options
     in
     let* interp = Interp.compile ~options:interp_options pattern in
